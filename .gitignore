@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Assets — keep only what's used in the app
+assets/*.mp4
+assets/*.pdf
+assets/*.zip
+assets/*.xlsx
+assets/Instructions/
+assets/firstquarter/
+assets/firstquarter.zip
+assets/2025PCJ/
+
+# Dev
+*.log
+node_modules/
