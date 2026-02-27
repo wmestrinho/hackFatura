@@ -1,0 +1,294 @@
+/**
+ * hackFatura | PCJ — App Logic
+ * Navigation, form submissions, kart tags, parts, events, dashboard.
+ */
+
+// ── Navigation ────────────────────────────────────────────────
+function go(viewId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(viewId)?.classList.add('active');
+  updateEventBadges();
+
+  if (viewId === 'eventDashboard') refreshDashboard();
+  if (viewId === 'invoiceBuilder' && document.getElementById('lineItemsList').children.length === 0) {
+    addLineItem(); // start with one empty line
+  }
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast${isError ? ' error' : ''}`;
+  el.classList.remove('hidden');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.add('hidden'), 3500);
+}
+
+// ── Events ────────────────────────────────────────────────────
+function renderEventSelect() {
+  const sel = document.getElementById('currentEvent');
+  const current = STATE.currentEvent;
+  sel.innerHTML = '<option value="">— Select Event —</option>';
+  STATE.events.forEach(ev => {
+    const opt = document.createElement('option');
+    opt.value = ev.name;
+    opt.textContent = ev.name + (ev.date ? ` (${ev.date})` : '');
+    if (ev.name === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function showModal(id) { document.getElementById(id)?.classList.add('open'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+function saveNewEvent() {
+  const name = document.getElementById('newEventName').value.trim();
+  const date = document.getElementById('newEventDate').value.trim();
+  const loc  = document.getElementById('newEventLocation').value.trim();
+  if (!name) { toast('Event name required', true); return; }
+
+  STATE.events.push({ name, date, location: loc });
+  saveEvents();
+  renderEventSelect();
+  setEvent(name);
+  document.getElementById('currentEvent').value = name;
+  closeModal('addEventModal');
+  document.getElementById('newEventName').value = '';
+  document.getElementById('newEventDate').value = '';
+  document.getElementById('newEventLocation').value = '';
+  toast(`Event created: ${name}`);
+}
+
+// ── Kart number tags ──────────────────────────────────────────
+function addKart() {
+  const input = document.getElementById('kartInput');
+  const val = input.value.trim();
+  if (!val || STATE.kartNumbers.includes(val)) { input.value = ''; return; }
+  STATE.kartNumbers.push(val);
+  renderKartTags();
+  input.value = '';
+  input.focus();
+}
+
+function removeKart(num) {
+  STATE.kartNumbers = STATE.kartNumbers.filter(k => k !== num);
+  renderKartTags();
+}
+
+function renderKartTags() {
+  const list = document.getElementById('kartTags');
+  const hidden = document.getElementById('kartNumbersHidden');
+  list.innerHTML = STATE.kartNumbers.map(k =>
+    `<span class="kart-tag">${k}<span class="remove" onclick="removeKart('${k}')"> ✕</span></span>`
+  ).join('');
+  hidden.value = STATE.kartNumbers.join(', ');
+}
+
+// Allow Enter to add kart number
+document.getElementById('kartInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); addKart(); }
+});
+
+// ── Parts ─────────────────────────────────────────────────────
+function addPart() {
+  const sel = document.getElementById('partType');
+  const qty = parseInt(document.getElementById('partQty').value) || 1;
+  const [name, price] = (sel.value || '').split('|');
+  if (!name) { toast('Select a part type', true); return; }
+
+  STATE.parts.push({ name, price: parseFloat(price), qty });
+  sel.value = '';
+  document.getElementById('partQty').value = 1;
+  renderParts();
+}
+
+function removePart(idx) {
+  STATE.parts.splice(idx, 1);
+  renderParts();
+}
+
+function renderParts() {
+  const list = document.getElementById('partsList');
+  const hidden = document.getElementById('partsHidden');
+  const total = STATE.parts.reduce((s, p) => s + p.price * p.qty, 0);
+
+  list.innerHTML = STATE.parts.map((p, i) =>
+    `<div class="part-item">
+       <span>${p.qty}x ${p.name}</span>
+       <span class="part-price">$${(p.price * p.qty).toFixed(2)}</span>
+       <span class="remove" onclick="removePart(${i})">✕</span>
+     </div>`
+  ).join('');
+  hidden.value = JSON.stringify(STATE.parts);
+  document.getElementById('partsTotal').textContent = `Total: $${total.toFixed(2)}`;
+}
+
+// ── Service price display ─────────────────────────────────────
+function updateServicePrice(sel) {
+  const [, price] = (sel.value || '').split('|');
+  const el = document.getElementById('tablePrice');
+  el.textContent = price !== undefined ? `$${price}` : '$—';
+}
+
+// ── Form: Table Work ──────────────────────────────────────────
+async function submitTableWork(e) {
+  e.preventDefault();
+  if (!STATE.currentUser) { toast('Select your name first (top right)', true); return; }
+  if (!STATE.currentEvent) { toast('Select or create an event first', true); return; }
+
+  const fd   = new FormData(e.target);
+  const data = Object.fromEntries(fd.entries());
+  const [serviceName, servicePrice] = (data.serviceType || '').split('|');
+  const payload = {
+    ...data,
+    serviceName,
+    servicePrice: parseFloat(servicePrice || 0),
+    event:      STATE.currentEvent,
+    loggedBy:   STATE.currentUser,
+    timestamp:  new Date().toISOString(),
+  };
+
+  try {
+    await logTableWork(payload);
+    toast('Table work entry saved ✓');
+    e.target.reset();
+    STATE.kartNumbers = [];
+    renderKartTags();
+    document.getElementById('tablePrice').textContent = '$—';
+  } catch (err) {
+    toast('Saved locally (offline mode) — will sync when connected', false);
+    // Still clear the form
+    e.target.reset();
+    STATE.kartNumbers = [];
+    renderKartTags();
+  }
+}
+
+// ── Form: Parts Work ──────────────────────────────────────────
+async function submitPartsWork(e) {
+  e.preventDefault();
+  if (!STATE.currentUser) { toast('Select your name first', true); return; }
+
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd.entries());
+  const payload = {
+    ...data,
+    parts:     STATE.parts,
+    partsTotal: STATE.parts.reduce((s, p) => s + p.price * p.qty, 0),
+    event:     STATE.currentEvent,
+    loggedBy:  STATE.currentUser,
+    timestamp: new Date().toISOString(),
+  };
+
+  if (STATE.parts.length === 0) { toast('Add at least one part', true); return; }
+
+  try {
+    await logPartsWork(payload);
+    toast('Parts entry saved ✓');
+  } catch (_) {
+    toast('Saved offline ✓');
+  }
+  e.target.reset();
+  STATE.parts = [];
+  renderParts();
+}
+
+// ── Form: Work Costs ──────────────────────────────────────────
+async function submitWorkCosts(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd.entries());
+  const payload = {
+    ...data,
+    event:     STATE.currentEvent,
+    loggedBy:  STATE.currentUser,
+    timestamp: new Date().toISOString(),
+  };
+  try {
+    await logWorkCosts(payload);
+    toast('Cost logged ✓');
+  } catch (_) {
+    toast('Saved offline ✓');
+  }
+  e.target.reset();
+}
+
+// ── Form: New Customer ────────────────────────────────────────
+async function submitNewCustomer(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd.entries());
+  const payload = { ...data, loggedBy: STATE.currentUser, timestamp: new Date().toISOString() };
+  try {
+    await logNewCustomer(payload);
+    toast('Customer saved ✓');
+    await loadCustomerDatalist();
+  } catch (_) {
+    toast('Saved offline ✓');
+  }
+  e.target.reset();
+}
+
+// ── Dashboard ─────────────────────────────────────────────────
+async function refreshDashboard() {
+  if (!STATE.currentEvent) {
+    toast('Select an event to see dashboard', true);
+    return;
+  }
+  document.getElementById('dashEventBadge').textContent = STATE.currentEvent;
+  try {
+    const res = await getEventSummary(STATE.currentEvent);
+    if (res && res.summary) {
+      const s = res.summary;
+      document.getElementById('dash_tw').textContent    = s.tableWorkCount   ?? '—';
+      document.getElementById('dash_pw').textContent    = s.partsCount        ?? '—';
+      document.getElementById('dash_rev').textContent   = s.revenue != null ? `$${s.revenue.toFixed(2)}` : '—';
+      document.getElementById('dash_costs').textContent = s.costs   != null ? `$${s.costs.toFixed(2)}`   : '—';
+      document.getElementById('dash_inv').textContent   = s.invoicesPending   ?? '—';
+      document.getElementById('dash_who').textContent   = s.loggers?.join(', ') ?? '—';
+    }
+  } catch (_) {
+    document.getElementById('dash_tw').textContent = 'Offline';
+  }
+}
+
+// ── Menu status line ──────────────────────────────────────────
+function updateMenuStatus() {
+  const el = document.getElementById('menuStatusLine');
+  if (!el) return;
+  const u = STATE.currentUser;
+  const e = STATE.currentEvent;
+  const now = new Date().toLocaleTimeString('en-US', { hour12: false });
+  if (u && e) {
+    el.textContent = `[ OPERATOR: ${u.toUpperCase()} // EVENT: ${e.toUpperCase()} // ${now} ]`;
+  } else if (u) {
+    el.textContent = `[ OPERATOR: ${u.toUpperCase()} // NO EVENT SELECTED ]`;
+  } else {
+    el.textContent = `[ SELECT OPERATOR AND EVENT TO BEGIN // ${now} ]`;
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────
+(function init() {
+  // Restore user selector
+  const userSel = document.getElementById('currentUser');
+  if (STATE.currentUser) userSel.value = STATE.currentUser;
+
+  // Restore events + selector
+  renderEventSelect();
+  updateEventBadges();
+  updateMenuStatus();
+
+  // Tick clock on menu
+  setInterval(updateMenuStatus, 10000);
+
+  // Set invoice number default
+  const now = new Date();
+  const autoNum = `PCJ-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-001`;
+  const invNum = document.getElementById('inv_number');
+  if (invNum) invNum.placeholder = autoNum;
+
+  // Load customer list from Sheets (non-blocking)
+  loadCustomerDatalist();
+})();
