@@ -37,18 +37,39 @@ function setupHeaders(sheet, name) {
   }
 }
 
-// ── Router ────────────────────────────────────────────────────
+// ── Router (GET — works around CORS/redirect issues from browsers) ────
+function doGet(e) {
+  // Health check — no params
+  if (!e.parameter || !e.parameter.action) {
+    return jsonResponse({ status: 'hackFatura PCJ API is alive 🏁' });
+  }
+
+  try {
+    const action  = e.parameter.action;
+    const payload = e.parameter.payload ? JSON.parse(e.parameter.payload) : {};
+
+    const handlers = {
+      logTableWork:    () => appendTableWork(payload),
+      logPartsWork:    () => appendPartsWork(payload),
+      logWorkCosts:    () => appendWorkCosts(payload),
+      logNewCustomer:  () => appendCustomer(payload),
+      logInvoice:      () => appendInvoice(payload),
+      getEventSummary: () => eventSummary(payload.event),
+      getCustomers:    () => customerList(),
+    };
+
+    if (!handlers[action]) return jsonResponse({ ok: false, error: 'Unknown action: ' + action });
+    return jsonResponse(handlers[action]());
+  } catch (err) {
+    return jsonResponse({ ok: false, error: err.message });
+  }
+}
+
+// ── Also keep POST for direct API use ────────────────────────
 function doPost(e) {
   try {
-    // Support both JSON body and form-encoded ?data= (for no-cors browser fetch)
-    let body;
-    if (e.parameter && e.parameter.data) {
-      body = JSON.parse(e.parameter.data);
-    } else {
-      body = JSON.parse(e.postData.contents);
-    }
+    const body = JSON.parse(e.postData.contents);
     const { action } = body;
-
     const handlers = {
       logTableWork:    () => appendTableWork(body),
       logPartsWork:    () => appendPartsWork(body),
@@ -58,19 +79,11 @@ function doPost(e) {
       getEventSummary: () => eventSummary(body.event),
       getCustomers:    () => customerList(),
     };
-
     if (!handlers[action]) return jsonResponse({ ok: false, error: 'Unknown action' });
     return jsonResponse(handlers[action]());
   } catch (err) {
     return jsonResponse({ ok: false, error: err.message });
   }
-}
-
-// ── Also support GET for testing ──────────────────────────────
-function doGet() {
-  return ContentService.createTextOutput(
-    JSON.stringify({ status: 'hackFatura PCJ API is alive 🏁' })
-  ).setMimeType(ContentService.MimeType.JSON);
 }
 
 function jsonResponse(data) {

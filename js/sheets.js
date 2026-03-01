@@ -11,15 +11,13 @@ async function sheetsPost(action, payload) {
     return { ok: true, dev: true };
   }
   try {
-    // Apps Script doesn't support CORS for JSON POST from browsers.
-    // Use no-cors with form-encoded body; Apps Script reads via e.parameter.data
-    const body = new URLSearchParams({ data: JSON.stringify({ action, ...payload }) });
-    await fetch(url, {
-      method: 'POST',
-      mode: 'no-cors',
-      body,
+    // Apps Script POST redirects drop the body (302 → GET).
+    // Use GET with URL params — Apps Script reads via e.parameter and it works cross-origin.
+    const params = new URLSearchParams({
+      action,
+      payload: JSON.stringify(payload),
     });
-    // no-cors means we can't read the response — assume ok
+    await fetch(`${url}?${params}`, { mode: 'no-cors' });
     return { ok: true };
   } catch (err) {
     console.error('[Sheets Error]', err);
