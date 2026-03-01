@@ -1,7 +1,7 @@
 /**
  * hackFatura | PCJ — Google Sheets API
  * Talks to the deployed Google Apps Script web app.
- * All data is sent as JSON via POST.
+ * Uses GET with URL params — Apps Script returns JSON with CORS headers.
  */
 
 async function sheetsPost(action, payload) {
@@ -11,14 +11,16 @@ async function sheetsPost(action, payload) {
     return { ok: true, dev: true };
   }
   try {
-    // Apps Script POST redirects drop the body (302 → GET).
-    // Use GET with URL params — Apps Script reads via e.parameter and it works cross-origin.
     const params = new URLSearchParams({
       action,
       payload: JSON.stringify(payload),
     });
-    await fetch(`${url}?${params}`, { mode: 'no-cors' });
-    return { ok: true };
+    const res = await fetch(`${url}?${params}`, {
+      method: 'GET',
+      redirect: 'follow',
+    });
+    const data = await res.json();
+    return data;
   } catch (err) {
     console.error('[Sheets Error]', err);
     throw err;
