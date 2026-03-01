@@ -955,6 +955,49 @@ optgroup { color: var(--text-dim); }
 ::-webkit-scrollbar-thumb:hover { background: var(--red); }
 
 /* ══════════════════════════════════════════════════════════════
+   VERSION BADGE
+══════════════════════════════════════════════════════════════ */
+.version-badge {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 2px;
+  letter-spacing: 1px;
+  margin-left: 4px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════════════════════════ */
+.app-footer {
+  text-align: center;
+  padding: 16px 24px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.app-footer a {
+  color: var(--red);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.app-footer a:hover {
+  color: var(--red-bright);
+  text-shadow: 0 0 8px var(--red-glow);
+}
+
+/* ══════════════════════════════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════════════════════════════ */
 @media (max-width: 600px) {

@@ -271,6 +271,12 @@ function updateMenuStatus() {
 
 // ── Init ──────────────────────────────────────────────────────
 (function init() {
+  // Display version from config (single source of truth)
+  const vBadge = document.getElementById('versionBadge');
+  const vFooter = document.getElementById('footerVersion');
+  if (vBadge) vBadge.textContent = PCJ.version;
+  if (vFooter) vFooter.textContent = PCJ.version;
+
   // Restore user selector
   const userSel = document.getElementById('currentUser');
   if (STATE.currentUser) userSel.value = STATE.currentUser;

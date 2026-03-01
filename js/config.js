@@ -4,6 +4,9 @@
  */
 
 const PCJ = {
+  // ── Version (single source of truth) ────────────────────────
+  version: 'v2.1.0 beta',
+
   business: {
     name:    'Parazinho Chassis Jig',
     abbr:    'PCJ',
