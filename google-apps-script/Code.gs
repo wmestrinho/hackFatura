@@ -7,7 +7,7 @@
  *   Customers | TableWork | PartsWork | WorkCosts | Invoices | Events
  */
 
-const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID'; // ← paste your Sheet ID here
+const SPREADSHEET_ID = '1_I9kaE7ag1aULPneCB8kwuNksjWzI-EIrkTNXUp_VTQ';
 
 function getSheet(name) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
