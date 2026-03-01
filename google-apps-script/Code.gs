@@ -40,7 +40,13 @@ function setupHeaders(sheet, name) {
 // ── Router ────────────────────────────────────────────────────
 function doPost(e) {
   try {
-    const body = JSON.parse(e.postData.contents);
+    // Support both JSON body and form-encoded ?data= (for no-cors browser fetch)
+    let body;
+    if (e.parameter && e.parameter.data) {
+      body = JSON.parse(e.parameter.data);
+    } else {
+      body = JSON.parse(e.postData.contents);
+    }
     const { action } = body;
 
     const handlers = {

@@ -7,18 +7,20 @@
 async function sheetsPost(action, payload) {
   const url = PCJ.SHEETS_SCRIPT_URL;
   if (url.includes('YOUR_SCRIPT_ID')) {
-    // In dev/offline mode — log to console, pretend success
     console.log('[DEV MODE] sheetsPost:', action, payload);
     return { ok: true, dev: true };
   }
   try {
-    const res = await fetch(url, {
+    // Apps Script doesn't support CORS for JSON POST from browsers.
+    // Use no-cors with form-encoded body; Apps Script reads via e.parameter.data
+    const body = new URLSearchParams({ data: JSON.stringify({ action, ...payload }) });
+    await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, ...payload }),
+      mode: 'no-cors',
+      body,
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    // no-cors means we can't read the response — assume ok
+    return { ok: true };
   } catch (err) {
     console.error('[Sheets Error]', err);
     throw err;
