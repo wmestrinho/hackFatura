@@ -3,23 +3,53 @@
  * Deploy as Web App: Execute as Me, Anyone can access.
  * Paste the deployment URL into js/config.js → PCJ.SHEETS_SCRIPT_URL
  *
- * Sheet tabs expected:
- *   Customers | TableWork | PartsWork | WorkCosts | Invoices | Events
+ * Sheet structure:
+ *   Customers              — global contact list (all events)
+ *   {Event}_TableWork      — per-event table work entries
+ *   {Event}_PartsWork      — per-event parts entries
+ *   {Event}_WorkCosts      — per-event overhead costs
+ *   {Event}_Invoices       — per-event invoices
  */
 
 const SPREADSHEET_ID = '1_I9kaE7ag1aULPneCB8kwuNksjWzI-EIrkTNXUp_VTQ';
 
-function getSheet(name) {
+// ── Sheet name helpers ─────────────────────────────────────────
+function sanitizeSheetName(name) {
+  if (!name) return 'NoEvent';
+  // Remove chars Google Sheets disallows in tab names, trim to 45 chars
+  return name.replace(/[\/\\*\?\[\]:]/g, '-').substring(0, 45).trim();
+}
+
+function eventSheet(eventName, type) {
+  return sanitizeSheetName(eventName) + '_' + type;
+}
+
+// ── Sheet access (auto-creates with headers if missing) ────────
+function getSheet(name, headerType) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
-    setupHeaders(sheet, name);
+    setupHeaders(sheet, headerType || name);
   }
   return sheet;
 }
 
-function setupHeaders(sheet, name) {
+function getOrEmpty(sheetName) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return [];
+  return sheet.getDataRange().getValues().slice(1);
+}
+
+function setupHeaders(sheet, type) {
+  // Strip event prefix to get base type (e.g. "SKUSA_TableWork" → "TableWork")
+  let baseType = type;
+  const known = ['TableWork', 'PartsWork', 'WorkCosts', 'Invoices', 'Customers', 'Events'];
+  for (const k of known) {
+    if (type === k || type.endsWith('_' + k)) { baseType = k; break; }
+  }
+
   const headers = {
     Customers:  ['Timestamp','LoggedBy','Organization','HomeTrack','FirstName','LastName','Title','Phone','Email'],
     TableWork:  ['Timestamp','LoggedBy','Event','Organization','KartNumbers','ServiceName','ServicePrice','PaymentMethod','PaymentStatus','Notes'],
@@ -28,9 +58,10 @@ function setupHeaders(sheet, name) {
     Invoices:   ['Timestamp','LoggedBy','InvoiceNumber','Event','Organization','Contact','Email','Phone','Items','Total','Notes'],
     Events:     ['Name','Date','Location','CreatedAt'],
   };
-  if (headers[name]) {
-    sheet.getRange(1, 1, 1, headers[name].length).setValues([headers[name]]);
-    sheet.getRange(1, 1, 1, headers[name].length)
+
+  if (headers[baseType]) {
+    sheet.getRange(1, 1, 1, headers[baseType].length).setValues([headers[baseType]]);
+    sheet.getRange(1, 1, 1, headers[baseType].length)
       .setBackground('#C0392B')
       .setFontColor('#ffffff')
       .setFontWeight('bold');
@@ -91,9 +122,10 @@ function jsonResponse(data) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// ── Appenders ─────────────────────────────────────────────────
+// ── Appenders — each write to its own event-scoped tab ────────
 function appendTableWork(d) {
-  getSheet('TableWork').appendRow([
+  const sheet = getSheet(eventSheet(d.event, 'TableWork'), 'TableWork');
+  sheet.appendRow([
     d.timestamp || new Date().toISOString(),
     d.loggedBy, d.event, d.organization,
     d.kartNumbers, d.serviceName, d.servicePrice,
@@ -106,7 +138,8 @@ function appendPartsWork(d) {
   const partsStr = Array.isArray(d.parts)
     ? d.parts.map(p => `${p.qty}x ${p.name}`).join(', ')
     : d.parts;
-  getSheet('PartsWork').appendRow([
+  const sheet = getSheet(eventSheet(d.event, 'PartsWork'), 'PartsWork');
+  sheet.appendRow([
     d.timestamp || new Date().toISOString(),
     d.loggedBy, d.event, d.organization,
     d.kartNumber || '', partsStr, d.partsTotal || 0,
@@ -116,7 +149,8 @@ function appendPartsWork(d) {
 }
 
 function appendWorkCosts(d) {
-  getSheet('WorkCosts').appendRow([
+  const sheet = getSheet(eventSheet(d.event, 'WorkCosts'), 'WorkCosts');
+  sheet.appendRow([
     d.timestamp || new Date().toISOString(),
     d.loggedBy, d.event, d.category,
     parseFloat(d.amount) || 0, d.paidBy,
@@ -126,6 +160,7 @@ function appendWorkCosts(d) {
 }
 
 function appendCustomer(d) {
+  // Customers always go to the global Customers tab
   getSheet('Customers').appendRow([
     d.timestamp || new Date().toISOString(),
     d.loggedBy, d.organization, d.homeTrack || '',
@@ -139,7 +174,8 @@ function appendInvoice(d) {
   const itemsStr = Array.isArray(d.items)
     ? d.items.map(i => `${i.qty}x ${i.desc} @$${i.unit}`).join(' | ')
     : '';
-  getSheet('Invoices').appendRow([
+  const sheet = getSheet(eventSheet(d.event, 'Invoices'), 'Invoices');
+  sheet.appendRow([
     d.date || new Date().toISOString(),
     d.loggedBy, d.number, d.event,
     d.org, d.contact || '', d.email || '', d.phone || '',
@@ -152,13 +188,10 @@ function appendInvoice(d) {
 function eventSummary(eventName) {
   if (!eventName) return { ok: false, error: 'No event specified' };
 
-  const tw = getSheet('TableWork').getDataRange().getValues().slice(1);
-  const pw = getSheet('PartsWork').getDataRange().getValues().slice(1);
-  const wc = getSheet('WorkCosts').getDataRange().getValues().slice(1);
-
-  const twRows = tw.filter(r => r[2] === eventName);
-  const pwRows = pw.filter(r => r[2] === eventName);
-  const wcRows = wc.filter(r => r[2] === eventName);
+  const twRows = getOrEmpty(eventSheet(eventName, 'TableWork'));
+  const pwRows = getOrEmpty(eventSheet(eventName, 'PartsWork'));
+  const wcRows = getOrEmpty(eventSheet(eventName, 'WorkCosts'));
+  const invRows = getOrEmpty(eventSheet(eventName, 'Invoices'));
 
   const revenue = [
     ...twRows.map(r => parseFloat(r[6]) || 0),
@@ -166,9 +199,6 @@ function eventSummary(eventName) {
   ].reduce((s, v) => s + v, 0);
 
   const costs = wcRows.map(r => parseFloat(r[4]) || 0).reduce((s, v) => s + v, 0);
-
-  const invoices = getSheet('Invoices').getDataRange().getValues().slice(1);
-  const invPending = invoices.filter(r => r[3] === eventName).length;
 
   const loggerSet = new Set([
     ...twRows.map(r => r[1]),
@@ -178,18 +208,18 @@ function eventSummary(eventName) {
   return {
     ok: true,
     summary: {
-      tableWorkCount:   twRows.length,
-      partsCount:       pwRows.length,
+      tableWorkCount:  twRows.length,
+      partsCount:      pwRows.length,
       revenue,
       costs,
-      invoicesPending:  invPending,
-      loggers:          [...loggerSet].filter(Boolean),
+      invoicesPending: invRows.length,
+      loggers:         [...loggerSet].filter(Boolean),
     },
   };
 }
 
 function customerList() {
-  const rows = getSheet('Customers').getDataRange().getValues().slice(1);
+  const rows = getOrEmpty('Customers');
   const names = [...new Set(rows.map(r => r[2]).filter(Boolean))].sort();
   return { ok: true, customers: names };
 }

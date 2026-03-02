@@ -149,7 +149,7 @@ async function submitTableWork(e) {
     timestamp:  new Date().toISOString(),
   };
 
-  const localEntry = { type: 'table', event: STATE.currentEvent, org: payload.organization, amount: payload.servicePrice, loggedBy: STATE.currentUser, paymentStatus: payload.paymentStatus };
+  const localEntry = { type: 'table', event: STATE.currentEvent, org: payload.organization, amount: payload.servicePrice, serviceName: payload.serviceName, loggedBy: STATE.currentUser, paymentStatus: payload.paymentStatus };
 
   try {
     await logTableWork(payload);
@@ -263,6 +263,66 @@ function refreshDashboard() {
   const netEl = document.getElementById('dash_net');
   netEl.textContent   = `$${net.toFixed(2)}`;
   netEl.className     = `dash-value${net < 0 ? ' red' : ' green'}`;
+}
+
+// ── Invoice Builder: Dual Mode ────────────────────────────────
+function setInvoiceMode(mode) {
+  const isEvent = mode === 'event';
+  document.getElementById('modeManual').classList.toggle('active', !isEvent);
+  document.getElementById('modeEvent').classList.toggle('active', isEvent);
+  document.getElementById('eventModePanel').style.display = isEvent ? 'block' : 'none';
+
+  if (isEvent) {
+    if (!STATE.currentEvent) { toast('Select an event first to use Event Mode', true); return; }
+    const sel = document.getElementById('inv_eventorg');
+    const names = [...new Set(STATE.localCustomers)].sort();
+    sel.innerHTML = '<option value="">— Select Team —</option>' +
+      names.map(n => `<option value="${n}">${n}</option>`).join('');
+    document.getElementById('eventEntriesSummary').innerHTML = '';
+  }
+}
+
+function loadEventEntries(org) {
+  if (!org) return;
+  if (!STATE.currentEvent) { toast('Select an event first', true); return; }
+
+  const ev = STATE.currentEvent;
+  const entries = STATE.localEntries.filter(e =>
+    e.event === ev && e.org === org && (e.type === 'table' || e.type === 'parts')
+  );
+
+  if (entries.length === 0) {
+    document.getElementById('eventEntriesSummary').innerHTML =
+      '<p class="entries-none">[ NO TABLE WORK OR PARTS ENTRIES FOUND FOR THIS TEAM IN THE CURRENT EVENT ]</p>';
+    toast('No entries found for this team', true);
+    return;
+  }
+
+  // Pre-fill bill-to and event fields
+  document.getElementById('inv_org').value   = org;
+  document.getElementById('inv_event').value = ev;
+
+  // Clear existing line items and rebuild from local entries
+  document.getElementById('lineItemsList').innerHTML = '';
+
+  const tableEntries = entries.filter(e => e.type === 'table');
+  const partsEntries = entries.filter(e => e.type === 'parts');
+
+  tableEntries.forEach(e => {
+    addLineItem(e.serviceName || 'Table Work Service', 1, e.amount || 0);
+  });
+  partsEntries.forEach(e => {
+    addLineItem('Parts & Components', 1, e.amount || 0);
+  });
+
+  const total = entries.reduce((s, e) => s + (e.amount || 0), 0);
+  document.getElementById('eventEntriesSummary').innerHTML = `
+    <div class="entries-summary-box">
+      <span>⚡ ${tableEntries.length} service + ${partsEntries.length} parts entries loaded</span>
+      <span class="entries-total">$${total.toFixed(2)}</span>
+    </div>`;
+
+  toast(`${entries.length} entries loaded for ${org}`);
 }
 
 // ── Menu status line ──────────────────────────────────────────

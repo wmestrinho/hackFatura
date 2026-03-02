@@ -288,6 +288,23 @@
         <span class="event-badge">PDF · OFFLINE-CAPABLE</span>
       </div>
 
+      <!-- Mode toggle -->
+      <div class="invoice-mode-toggle">
+        <button id="modeManual" class="inv-mode-btn active" onclick="setInvoiceMode('manual')">✍ MANUAL</button>
+        <button id="modeEvent"  class="inv-mode-btn"        onclick="setInvoiceMode('event')">⚡ EVENT MODE</button>
+      </div>
+
+      <!-- Event Mode panel (hidden in manual mode) -->
+      <div id="eventModePanel" class="event-mode-panel">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Select Team / Organization</label>
+          <select id="inv_eventorg" onchange="loadEventEntries(this.value)">
+            <option value="">— Select Team —</option>
+          </select>
+        </div>
+        <div id="eventEntriesSummary"></div>
+      </div>
+
       <div class="form-card">
         <div class="corner-tl"></div><div class="corner-tr"></div>
         <div class="corner-bl"></div><div class="corner-br"></div>

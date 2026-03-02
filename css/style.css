@@ -320,7 +320,6 @@ body::after {
 .menu-card:hover::after  { width: 100%; }
 
 .menu-card.highlight {
-  border-color: var(--border-hot);
   background: linear-gradient(135deg, var(--surface) 0%, rgba(192,57,43,0.08) 100%);
 }
 
@@ -658,6 +657,84 @@ optgroup { color: var(--text-dim); }
 .total-row.grand span:last-child {
   color: var(--red-bright);
   text-shadow: 0 0 20px var(--red-glow);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INVOICE MODE TOGGLE
+══════════════════════════════════════════════════════════════ */
+.invoice-mode-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.inv-mode-btn {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-sub);
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.inv-mode-btn.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+  box-shadow: 0 0 16px var(--red-glow);
+}
+
+.inv-mode-btn:hover:not(.active) {
+  border-color: var(--red);
+  color: var(--text);
+  background: var(--surface3);
+}
+
+.event-mode-panel {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border-hot);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 14px;
+  animation: fadeUp 0.2s ease;
+}
+
+.entries-summary-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--success-dim);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--success);
+  margin-top: 14px;
+  letter-spacing: 1px;
+}
+
+.entries-total {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.entries-none {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: 12px;
+  text-align: center;
+  letter-spacing: 1px;
 }
 
 /* ══════════════════════════════════════════════════════════════
