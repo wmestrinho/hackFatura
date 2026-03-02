@@ -49,11 +49,13 @@ const PCJ = {
 
 // ── App state (in-memory, persisted to localStorage) ───────────
 const STATE = {
-  currentUser:  localStorage.getItem('pcj_user')  || '',
-  currentEvent: localStorage.getItem('pcj_event') || '',
-  events:       JSON.parse(localStorage.getItem('pcj_events') || '[]'),
-  kartNumbers:  [],
-  parts:        [],
+  currentUser:    localStorage.getItem('pcj_user')           || '',
+  currentEvent:   localStorage.getItem('pcj_event')          || '',
+  events:         JSON.parse(localStorage.getItem('pcj_events')         || '[]'),
+  localEntries:   JSON.parse(localStorage.getItem('pcj_local_entries')  || '[]'),
+  localCustomers: JSON.parse(localStorage.getItem('pcj_local_customers')|| '[]'),
+  kartNumbers:    [],
+  parts:          [],
 };
 
 function setUser(val) {
@@ -79,4 +81,16 @@ function updateEventBadges() {
 
 function saveEvents() {
   localStorage.setItem('pcj_events', JSON.stringify(STATE.events));
+}
+
+function saveLocalEntry(entry) {
+  STATE.localEntries.push({ ...entry, savedAt: new Date().toISOString() });
+  localStorage.setItem('pcj_local_entries', JSON.stringify(STATE.localEntries));
+}
+
+function saveLocalCustomer(org) {
+  if (org && !STATE.localCustomers.includes(org)) {
+    STATE.localCustomers.push(org);
+    localStorage.setItem('pcj_local_customers', JSON.stringify(STATE.localCustomers));
+  }
 }

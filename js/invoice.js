@@ -247,6 +247,8 @@ async function saveInvoiceToSheets() {
     await logInvoice(d);
     toast('Invoice saved to Sheets ✓');
   } catch (e) {
-    toast('Could not save to Sheets — check connection', true);
+    toast('Saved locally — Sheets offline', false);
   }
+  saveLocalEntry({ type: 'invoice', event: d.event, org: d.org, amount: d.total, loggedBy: d.loggedBy, invoiceNumber: d.number });
+  saveLocalCustomer(d.org);
 }

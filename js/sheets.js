@@ -55,17 +55,23 @@ async function getCustomers() {
   return sheetsPost('getCustomers', {});
 }
 
-async function loadCustomerDatalist() {
-  try {
-    const res = await getCustomers();
-    if (res && res.customers) {
-      const dl = document.getElementById('customerList');
-      dl.innerHTML = '';
-      res.customers.forEach(name => {
-        const opt = document.createElement('option');
-        opt.value = name;
-        dl.appendChild(opt);
-      });
+function loadCustomerDatalist() {
+  const dl = document.getElementById('customerList');
+  if (!dl) return;
+
+  // Seed from local cache immediately (works offline)
+  const render = (names) => {
+    dl.innerHTML = [...new Set(names)].sort()
+      .map(n => `<option value="${n}">`)
+      .join('');
+  };
+  render(STATE.localCustomers);
+
+  // Attempt to merge from Sheets in background (no-cors returns opaque — skip if no data)
+  getCustomers().then(res => {
+    if (res && res.customers && res.customers.length) {
+      res.customers.forEach(n => saveLocalCustomer(n));
+      render(STATE.localCustomers);
     }
-  } catch (_) { /* offline — skip */ }
+  }).catch(() => {});
 }

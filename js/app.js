@@ -149,20 +149,20 @@ async function submitTableWork(e) {
     timestamp:  new Date().toISOString(),
   };
 
+  const localEntry = { type: 'table', event: STATE.currentEvent, org: payload.organization, amount: payload.servicePrice, loggedBy: STATE.currentUser, paymentStatus: payload.paymentStatus };
+
   try {
     await logTableWork(payload);
     toast('Table work entry saved ✓');
-    e.target.reset();
-    STATE.kartNumbers = [];
-    renderKartTags();
-    document.getElementById('tablePrice').textContent = '$—';
   } catch (err) {
-    toast('Saved locally (offline mode) — will sync when connected', false);
-    // Still clear the form
-    e.target.reset();
-    STATE.kartNumbers = [];
-    renderKartTags();
+    toast('Saved locally — Sheets offline', false);
   }
+  saveLocalEntry(localEntry);
+  saveLocalCustomer(payload.organization);
+  e.target.reset();
+  STATE.kartNumbers = [];
+  renderKartTags();
+  document.getElementById('tablePrice').textContent = '$—';
 }
 
 // ── Form: Parts Work ──────────────────────────────────────────
@@ -187,8 +187,10 @@ async function submitPartsWork(e) {
     await logPartsWork(payload);
     toast('Parts entry saved ✓');
   } catch (_) {
-    toast('Saved offline ✓');
+    toast('Saved locally — Sheets offline', false);
   }
+  saveLocalEntry({ type: 'parts', event: STATE.currentEvent, org: payload.organization, amount: payload.partsTotal, loggedBy: STATE.currentUser, paymentStatus: payload.paymentStatus });
+  saveLocalCustomer(payload.organization);
   e.target.reset();
   STATE.parts = [];
   renderParts();
@@ -209,8 +211,9 @@ async function submitWorkCosts(e) {
     await logWorkCosts(payload);
     toast('Cost logged ✓');
   } catch (_) {
-    toast('Saved offline ✓');
+    toast('Saved locally — Sheets offline', false);
   }
+  saveLocalEntry({ type: 'cost', event: STATE.currentEvent, amount: parseFloat(data.amount) || 0, loggedBy: STATE.currentUser });
   e.target.reset();
 }
 
@@ -223,34 +226,43 @@ async function submitNewCustomer(e) {
   try {
     await logNewCustomer(payload);
     toast('Customer saved ✓');
-    await loadCustomerDatalist();
   } catch (_) {
-    toast('Saved offline ✓');
+    toast('Saved locally — Sheets offline', false);
   }
+  saveLocalCustomer(data.organization);
+  loadCustomerDatalist();
   e.target.reset();
 }
 
 // ── Dashboard ─────────────────────────────────────────────────
-async function refreshDashboard() {
+function refreshDashboard() {
   if (!STATE.currentEvent) {
     toast('Select an event to see dashboard', true);
     return;
   }
   document.getElementById('dashEventBadge').textContent = STATE.currentEvent;
-  try {
-    const res = await getEventSummary(STATE.currentEvent);
-    if (res && res.summary) {
-      const s = res.summary;
-      document.getElementById('dash_tw').textContent    = s.tableWorkCount   ?? '—';
-      document.getElementById('dash_pw').textContent    = s.partsCount        ?? '—';
-      document.getElementById('dash_rev').textContent   = s.revenue != null ? `$${s.revenue.toFixed(2)}` : '—';
-      document.getElementById('dash_costs').textContent = s.costs   != null ? `$${s.costs.toFixed(2)}`   : '—';
-      document.getElementById('dash_inv').textContent   = s.invoicesPending   ?? '—';
-      document.getElementById('dash_who').textContent   = s.loggers?.join(', ') ?? '—';
-    }
-  } catch (_) {
-    document.getElementById('dash_tw').textContent = 'Offline';
-  }
+
+  const ev      = STATE.currentEvent;
+  const entries = STATE.localEntries.filter(e => e.event === ev);
+  const twRows  = entries.filter(e => e.type === 'table');
+  const pwRows  = entries.filter(e => e.type === 'parts');
+  const wcRows  = entries.filter(e => e.type === 'cost');
+  const invRows = entries.filter(e => e.type === 'invoice');
+
+  const revenue = [...twRows, ...pwRows].reduce((s, e) => s + (e.amount || 0), 0);
+  const costs   = wcRows.reduce((s, e) => s + (e.amount || 0), 0);
+  const ops     = [...new Set([...twRows, ...pwRows].map(e => e.loggedBy).filter(Boolean))];
+
+  document.getElementById('dash_tw').textContent    = twRows.length  || '0';
+  document.getElementById('dash_pw').textContent    = pwRows.length  || '0';
+  document.getElementById('dash_rev').textContent   = `$${revenue.toFixed(2)}`;
+  document.getElementById('dash_costs').textContent = `$${costs.toFixed(2)}`;
+  document.getElementById('dash_inv').textContent   = invRows.length || '0';
+  document.getElementById('dash_who').textContent   = ops.join(', ') || '—';
+  const net = revenue - costs;
+  const netEl = document.getElementById('dash_net');
+  netEl.textContent   = `$${net.toFixed(2)}`;
+  netEl.className     = `dash-value${net < 0 ? ' red' : ' green'}`;
 }
 
 // ── Menu status line ──────────────────────────────────────────
