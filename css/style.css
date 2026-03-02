@@ -1083,7 +1083,51 @@ optgroup { color: var(--text-dim); }
    RESPONSIVE
 ══════════════════════════════════════════════════════════════ */
 @media (max-width: 600px) {
-  .header-inner { height: auto; padding: 12px 16px; flex-wrap: wrap; }
+  /* ── Header: stack into 3 rows ─────────────────────────────── */
+  .header-inner {
+    height: auto;
+    padding: 10px 14px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .header-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    align-items: end;
+  }
+
+  /* SYS_ONLINE spans both columns */
+  .sys-status {
+    grid-column: 1 / -1;
+    font-size: 0.6rem;
+  }
+
+  /* Each HUD block fills its grid cell */
+  .hud-block {
+    width: 100%;
+  }
+
+  /* Selects stretch to fill cell */
+  .hud-select {
+    width: 100%;
+    min-width: 0;
+    font-size: 0.75rem;
+    padding: 6px 8px;
+  }
+
+  /* Event select + [+] button row */
+  .hud-block > div[style] {
+    width: 100%;
+  }
+  .hud-block > div[style] .hud-select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* ── General layout ─────────────────────────────────────────── */
   .container { padding: 20px 14px 60px; }
   .form-card { padding: 18px; }
   .line-items-header,
