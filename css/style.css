@@ -929,6 +929,207 @@ optgroup { color: var(--text-dim); }
   text-shadow: 0 0 20px rgba(192, 57, 43, 0.5);
 }
 
+/* ── Clickable dash card states ─────────────────────────────── */
+.dash-card.clickable { cursor: pointer; }
+
+.dash-card.active-detail {
+  border-color: var(--red);
+  background: var(--surface2);
+  box-shadow: 0 0 0 1px var(--red), 0 4px 24px rgba(192, 57, 43, 0.2);
+}
+
+.dash-expand {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+}
+.dash-card.clickable:hover .dash-expand,
+.dash-card.active-detail .dash-expand {
+  opacity: 1;
+}
+.dash-card.active-detail .dash-expand { color: var(--red); }
+
+/* ── Detail drill-down panel ────────────────────────────────── */
+.dash-detail {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border-hot);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  overflow: hidden;
+  animation: fadeUp 0.18s ease;
+}
+
+.dash-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px;
+  background: rgba(192, 57, 43, 0.07);
+  border-bottom: 1px solid var(--border-hot);
+}
+
+.dash-detail-title {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--red);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.dash-detail-close {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: none;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.dash-detail-close:hover {
+  border-color: var(--red);
+  color: var(--text);
+}
+
+.dash-detail-list {
+  padding: 4px 0;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+/* ── Detail rows ────────────────────────────────────────────── */
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  gap: 12px;
+  transition: background 0.15s;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-row:hover      { background: var(--surface2); }
+
+.detail-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-org {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.detail-info {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail-type-tag {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--red);
+  background: var(--red-dim);
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  border-radius: 2px;
+  padding: 1px 5px;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.detail-inv-num {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--red);
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.detail-amount {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--success);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.detail-amount.cost { color: var(--danger); }
+
+.detail-status {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.status-paid {
+  color: var(--success);
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+}
+.status-pending {
+  color: var(--text-dim);
+  background: var(--surface3);
+  border: 1px solid var(--border);
+}
+
+.detail-by {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-sub);
+  white-space: nowrap;
+}
+
+.detail-time {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.detail-empty {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 30px 20px;
+  letter-spacing: 2px;
+}
+
+@media (max-width: 600px) {
+  .detail-row   { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .detail-meta  { flex-wrap: wrap; gap: 8px; }
+  .detail-time  { display: none; }
+}
+
 /* ══════════════════════════════════════════════════════════════
    MODAL
 ══════════════════════════════════════════════════════════════ */

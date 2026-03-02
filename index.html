@@ -565,23 +565,28 @@
       </div>
 
       <div class="dashboard-grid">
-        <div class="dash-card">
+        <div class="dash-card clickable" data-detail="table" onclick="showDashDetail('table')">
+          <span class="dash-expand">LIST ▶</span>
           <div class="dash-label">// Table Work Entries</div>
           <div class="dash-value" id="dash_tw">—</div>
         </div>
-        <div class="dash-card">
+        <div class="dash-card clickable" data-detail="parts" onclick="showDashDetail('parts')">
+          <span class="dash-expand">LIST ▶</span>
           <div class="dash-label">// Parts Entries</div>
           <div class="dash-value" id="dash_pw">—</div>
         </div>
-        <div class="dash-card">
+        <div class="dash-card clickable" data-detail="revenue" onclick="showDashDetail('revenue')">
+          <span class="dash-expand">LIST ▶</span>
           <div class="dash-label">// Revenue Collected</div>
           <div class="dash-value green" id="dash_rev">—</div>
         </div>
-        <div class="dash-card">
+        <div class="dash-card clickable" data-detail="costs" onclick="showDashDetail('costs')">
+          <span class="dash-expand">LIST ▶</span>
           <div class="dash-label">// Overhead Costs</div>
           <div class="dash-value" id="dash_costs">—</div>
         </div>
-        <div class="dash-card">
+        <div class="dash-card clickable" data-detail="invoice" onclick="showDashDetail('invoice')">
+          <span class="dash-expand">LIST ▶</span>
           <div class="dash-label">// Invoices Logged</div>
           <div class="dash-value" id="dash_inv">—</div>
         </div>
@@ -593,6 +598,15 @@
           <div class="dash-label">// Net Profit</div>
           <div class="dash-value green" id="dash_net">—</div>
         </div>
+      </div>
+
+      <!-- ── Detail drill-down panel ──────────────────── -->
+      <div id="dashDetail" class="dash-detail">
+        <div class="dash-detail-header">
+          <span class="dash-detail-title" id="dashDetailTitle">—</span>
+          <button class="dash-detail-close" onclick="closeDashDetail()">✕ CLOSE</button>
+        </div>
+        <div class="dash-detail-list" id="dashDetailList"></div>
       </div>
 
       <button class="btn-secondary" onclick="refreshDashboard()">↻ REFRESH DATA</button>

@@ -265,6 +265,135 @@ function refreshDashboard() {
   netEl.className     = `dash-value${net < 0 ? ' red' : ' green'}`;
 }
 
+// ── Dashboard detail drill-down ───────────────────────────────
+function showDashDetail(type) {
+  const panel    = document.getElementById('dashDetail');
+  const titleEl  = document.getElementById('dashDetailTitle');
+  const listEl   = document.getElementById('dashDetailList');
+
+  // Toggle off if already showing this type
+  if (panel.dataset.active === type && panel.style.display !== 'none') {
+    closeDashDetail();
+    return;
+  }
+
+  if (!STATE.currentEvent) { toast('Select an event first', true); return; }
+  const ev      = STATE.currentEvent;
+  const entries = STATE.localEntries.filter(e => e.event === ev);
+
+  const configs = {
+    table:   { label: 'TABLE WORK ENTRIES',  rows: entries.filter(e => e.type === 'table') },
+    parts:   { label: 'PARTS ENTRIES',       rows: entries.filter(e => e.type === 'parts') },
+    revenue: { label: 'REVENUE ENTRIES',     rows: entries.filter(e => e.type === 'table' || e.type === 'parts') },
+    costs:   { label: 'OVERHEAD COSTS',      rows: entries.filter(e => e.type === 'cost') },
+    invoice: { label: 'INVOICES LOGGED',     rows: entries.filter(e => e.type === 'invoice') },
+  };
+
+  const { label, rows } = configs[type] || { label: type, rows: [] };
+  const sorted = [...rows].sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
+
+  titleEl.textContent = `[ ${label} — ${sorted.length} RECORD${sorted.length !== 1 ? 'S' : ''} ]`;
+  listEl.innerHTML = sorted.length === 0
+    ? '<p class="detail-empty">[ NO RECORDS FOR THIS EVENT ]</p>'
+    : sorted.map(r => buildDetailRow(r, type)).join('');
+
+  // Mark active card
+  document.querySelectorAll('.dash-card[data-detail]').forEach(c => c.classList.remove('active-detail'));
+  document.querySelector(`.dash-card[data-detail="${type}"]`)?.classList.add('active-detail');
+
+  panel.dataset.active = type;
+  panel.style.display  = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeDashDetail() {
+  const panel = document.getElementById('dashDetail');
+  panel.style.display  = 'none';
+  panel.dataset.active = '';
+  document.querySelectorAll('.dash-card[data-detail]').forEach(c => c.classList.remove('active-detail'));
+}
+
+function buildDetailRow(e, type) {
+  const dt     = e.savedAt ? new Date(e.savedAt) : null;
+  const time   = dt ? dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—';
+  const date   = dt ? dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })    : '—';
+  const amt    = `$${(e.amount || 0).toFixed(2)}`;
+  const paid   = e.paymentStatus === 'Paid';
+  const status = e.paymentStatus
+    ? `<span class="detail-status ${paid ? 'status-paid' : 'status-pending'}">${e.paymentStatus}</span>`
+    : '';
+
+  const metaBase = `
+    <span class="detail-by">${e.loggedBy || '—'}</span>
+    <span class="detail-time">${date} ${time}</span>`;
+
+  if (type === 'table') return `
+    <div class="detail-row">
+      <div class="detail-main">
+        <span class="detail-org">${e.org || '—'}</span>
+        <span class="detail-info">${e.serviceName || 'Table Work'}</span>
+      </div>
+      <div class="detail-meta">
+        <span class="detail-amount">${amt}</span>
+        ${status}${metaBase}
+      </div>
+    </div>`;
+
+  if (type === 'parts') return `
+    <div class="detail-row">
+      <div class="detail-main">
+        <span class="detail-org">${e.org || '—'}</span>
+        <span class="detail-info">Parts &amp; Components</span>
+      </div>
+      <div class="detail-meta">
+        <span class="detail-amount">${amt}</span>
+        ${status}${metaBase}
+      </div>
+    </div>`;
+
+  if (type === 'revenue') {
+    const tag  = e.type === 'table' ? 'TW' : 'PW';
+    const info = e.type === 'table' ? (e.serviceName || 'Table Work') : 'Parts';
+    return `
+    <div class="detail-row">
+      <div class="detail-main">
+        <span class="detail-type-tag">${tag}</span>
+        <span class="detail-org">${e.org || '—'}</span>
+        <span class="detail-info">${info}</span>
+      </div>
+      <div class="detail-meta">
+        <span class="detail-amount">${amt}</span>
+        ${status}${metaBase}
+      </div>
+    </div>`;
+  }
+
+  if (type === 'costs') return `
+    <div class="detail-row">
+      <div class="detail-main">
+        <span class="detail-org">// overhead expense</span>
+      </div>
+      <div class="detail-meta">
+        <span class="detail-amount cost">${amt}</span>
+        ${metaBase}
+      </div>
+    </div>`;
+
+  if (type === 'invoice') return `
+    <div class="detail-row">
+      <div class="detail-main">
+        <span class="detail-inv-num">${e.invoiceNumber || '—'}</span>
+        <span class="detail-org">${e.org || '—'}</span>
+      </div>
+      <div class="detail-meta">
+        <span class="detail-amount">${amt}</span>
+        ${metaBase}
+      </div>
+    </div>`;
+
+  return '';
+}
+
 // ── Invoice Builder: Dual Mode ────────────────────────────────
 function setInvoiceMode(mode) {
   const isEvent = mode === 'event';
