@@ -26,6 +26,7 @@ function eventSheet(eventName, type) {
 
 // ── Sheet access (auto-creates with headers if missing) ────────
 function getSheet(name, headerType) {
+  if (!name) throw new Error('getSheet: sheet name is required (got: ' + name + ')');
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName(name);
   if (!sheet) {
@@ -43,6 +44,9 @@ function getOrEmpty(sheetName) {
 }
 
 function setupHeaders(sheet, type) {
+  // Guard: if type is missing or not a string, nothing to set up
+  if (!type || typeof type !== 'string') return;
+
   // Strip event prefix to get base type (e.g. "SKUSA_TableWork" → "TableWork")
   let baseType = type;
   const known = ['TableWork', 'PartsWork', 'WorkCosts', 'Invoices', 'Customers', 'Events'];
