@@ -19,7 +19,7 @@ const PCJ = {
 
   // ── Google Apps Script Web App URL ──────────────────────────
   // After deploying Apps Script, paste the URL here:
-  SHEETS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzrL_-jMTBT9h5anki0FPf1OuHfoFi1pMvOhO9J3wd4iOxudkSEbTh5akXhcRLWgWX5/exec',
+  SHEETS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbw4XW2bY7gbIdGRMNdrQTBijlRCbN1_RcPz3jJoBeKWuL5JrDbmrfGDbn0jyMs4yS8A/exec',
 
   // ── Team members ─────────────────────────────────────────────
   team: ['Wagner', 'Thiago', 'Bebeco', 'Samuel', 'Henrique'],
