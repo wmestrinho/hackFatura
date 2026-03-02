@@ -26,6 +26,7 @@
   --text-mono:    #c0c0d8;
   --success:      #00ff88;
   --success-dim:  rgba(0, 255, 136, 0.15);
+  --danger:       #E74C3C;
   --cyan:         #00d4ff;
   --cyan-dim:     rgba(0, 212, 255, 0.1);
   --radius:       4px;

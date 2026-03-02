@@ -318,7 +318,7 @@ function buildDetailRow(e, type) {
   const time   = dt ? dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—';
   const date   = dt ? dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })    : '—';
   const amt    = `$${(e.amount || 0).toFixed(2)}`;
-  const paid   = e.paymentStatus === 'Paid';
+  const paid   = e.paymentStatus === 'PAID';
   const status = e.paymentStatus
     ? `<span class="detail-status ${paid ? 'status-paid' : 'status-pending'}">${e.paymentStatus}</span>`
     : '';
@@ -475,8 +475,10 @@ function updateMenuStatus() {
   // Display version from config (single source of truth)
   const vBadge = document.getElementById('versionBadge');
   const vFooter = document.getElementById('footerVersion');
-  if (vBadge) vBadge.textContent = PCJ.version;
+  const vMenu  = document.getElementById('menuVersion');
+  if (vBadge)  vBadge.textContent  = PCJ.version;
   if (vFooter) vFooter.textContent = PCJ.version;
+  if (vMenu)   vMenu.textContent   = PCJ.version;
 
   // Restore user selector
   const userSel = document.getElementById('currentUser');
