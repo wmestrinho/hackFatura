@@ -75,37 +75,89 @@
       <div class="menu-grid">
 
         <button class="menu-card" onclick="go('tableWork')">
-          <div class="card-icon-wrap">🔧</div>
+          <div class="card-icon-wrap">
+            <!-- Targeting crosshair / alignment reticle -->
+            <svg class="card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <circle cx="12" cy="12" r="7"/>
+              <line x1="12" y1="2" x2="12" y2="7"/>
+              <line x1="12" y1="17" x2="12" y2="22"/>
+              <line x1="2" y1="12" x2="7" y2="12"/>
+              <line x1="17" y1="12" x2="22" y2="12"/>
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+            </svg>
+          </div>
           <div class="card-label">Table Work</div>
           <div class="card-sub">// Chassis adjustments</div>
         </button>
 
         <button class="menu-card" onclick="go('partsWork')">
-          <div class="card-icon-wrap">⚙️</div>
+          <div class="card-icon-wrap">
+            <!-- Hexagonal bolt / mechanical component -->
+            <svg class="card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
+              <path d="M12 3 L20.5 8 L20.5 16 L12 21 L3.5 16 L3.5 8 Z"/>
+              <path d="M12 8 L16.5 10.5 L16.5 13.5 L12 16 L7.5 13.5 L7.5 10.5 Z"/>
+            </svg>
+          </div>
           <div class="card-label">Parts Work</div>
           <div class="card-sub">// Spindles · Axles · Columns</div>
         </button>
 
         <button class="menu-card highlight" onclick="go('invoiceBuilder')">
-          <div class="card-icon-wrap">🧾</div>
+          <div class="card-icon-wrap">
+            <!-- HUD scan brackets + data lines -->
+            <svg class="card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <path d="M4 9 L4 4 L9 4"/>
+              <path d="M15 4 L20 4 L20 9"/>
+              <path d="M4 15 L4 20 L9 20"/>
+              <path d="M15 20 L20 20 L20 15"/>
+              <line x1="7" y1="9"  x2="17" y2="9"/>
+              <line x1="7" y1="12" x2="17" y2="12"/>
+              <line x1="7" y1="15" x2="13" y2="15"/>
+            </svg>
+          </div>
           <div class="card-label">Invoice Builder</div>
           <div class="card-sub">// Generate PDF · Offline-capable</div>
         </button>
 
         <button class="menu-card" onclick="go('newCustomer')">
-          <div class="card-icon-wrap">👤</div>
+          <div class="card-icon-wrap">
+            <!-- Profile silhouette with scan brackets -->
+            <svg class="card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <circle cx="12" cy="9" r="3.5"/>
+              <path d="M4.5 20.5 C4.5 17 8 14.5 12 14.5 C16 14.5 19.5 17 19.5 20.5"/>
+              <path d="M1 5 L1 2 L4 2"/>
+              <path d="M20 2 L23 2 L23 5"/>
+            </svg>
+          </div>
           <div class="card-label">New Customer</div>
           <div class="card-sub">// Register team / contact</div>
         </button>
 
         <button class="menu-card" onclick="go('workCosts')">
-          <div class="card-icon-wrap">💸</div>
+          <div class="card-icon-wrap">
+            <!-- Octagon chip with debit minus -->
+            <svg class="card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 8.5 L8.5 3 L15.5 3 L21 8.5 L21 15.5 L15.5 21 L8.5 21 L3 15.5 Z"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+              <line x1="12" y1="7"  x2="12" y2="9"/>
+              <line x1="12" y1="15" x2="12" y2="17"/>
+            </svg>
+          </div>
           <div class="card-label">Work Costs</div>
           <div class="card-sub">// Overhead · Expenses</div>
         </button>
 
         <button class="menu-card" onclick="go('eventDashboard')">
-          <div class="card-icon-wrap">📊</div>
+          <div class="card-icon-wrap">
+            <!-- Radar sweep with blip -->
+            <svg class="card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <circle cx="12" cy="12" r="9"/>
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="12" x2="19.4" y2="6.8"/>
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+              <circle cx="17"  cy="7.5" r="1"   fill="currentColor" stroke="none"/>
+            </svg>
+          </div>
           <div class="card-label">Event Dashboard</div>
           <div class="card-sub">// Revenue · Costs · Summary</div>
         </button>

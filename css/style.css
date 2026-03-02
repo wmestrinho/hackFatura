@@ -332,6 +332,25 @@ body::after {
   box-shadow: 0 8px 40px rgba(192, 57, 43, 0.25), 0 0 0 1px var(--red);
 }
 
+.card-svg {
+  width: 22px;
+  height: 22px;
+  color: var(--text-sub);
+  transition: color 0.25s, filter 0.25s;
+  flex-shrink: 0;
+}
+.menu-card:hover .card-svg {
+  color: var(--red-bright);
+  filter: drop-shadow(0 0 5px var(--red-glow));
+}
+.menu-card.highlight .card-svg {
+  color: var(--red);
+}
+.menu-card.highlight:hover .card-svg {
+  color: var(--red-bright);
+  filter: drop-shadow(0 0 8px var(--red-glow));
+}
+
 .card-icon-wrap {
   width: 40px;
   height: 40px;
