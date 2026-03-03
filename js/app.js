@@ -497,6 +497,52 @@ function loadEventEntries(org) {
   toast(`${entries.length} entries loaded for ${org}`);
 }
 
+// ── CSV Export ────────────────────────────────────────────────
+function exportEventCSV() {
+  if (!STATE.currentEvent) { toast('Select an event first', true); return; }
+
+  const ev      = STATE.currentEvent;
+  const entries = STATE.localEntries.filter(e => e.event === ev);
+  if (entries.length === 0) { toast('No entries to export', true); return; }
+
+  const typeLabel = { table: 'Table Work', parts: 'Parts Work', cost: 'Overhead Cost', invoice: 'Invoice' };
+  const headers   = ['Type', 'Date', 'Time', 'Event', 'Organization', 'Service / Item', 'Amount (USD)', 'Payment Status', 'Logged By', 'Invoice #'];
+
+  const rows = [...entries]
+    .sort((a, b) => new Date(a.savedAt || 0) - new Date(b.savedAt || 0))
+    .map(e => {
+      const dt      = e.savedAt ? new Date(e.savedAt) : null;
+      const date    = dt ? dt.toLocaleDateString('en-US') : '';
+      const time    = dt ? dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+      const service = e.serviceName || (e.type === 'parts' ? 'Parts & Components' : '');
+      return [
+        typeLabel[e.type] || e.type,
+        date,
+        time,
+        e.event        || '',
+        e.org          || '',
+        service,
+        (e.amount || 0).toFixed(2),
+        e.paymentStatus  || '',
+        e.loggedBy       || '',
+        e.invoiceNumber  || '',
+      ];
+    });
+
+  const escape     = v => `"${String(v).replace(/"/g, '""')}"`;
+  const csvContent = [headers, ...rows].map(r => r.map(escape).join(',')).join('\n');
+
+  const blob    = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url     = URL.createObjectURL(blob);
+  const a       = document.createElement('a');
+  a.href        = url;
+  a.download    = `PCJ_${ev.replace(/[\s/\\*?[\]:]/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  toast(`CSV exported — ${entries.length} entries`);
+}
+
 // ── Menu status line ──────────────────────────────────────────
 function updateMenuStatus() {
   const el = document.getElementById('menuStatusLine');
