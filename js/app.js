@@ -357,21 +357,28 @@ function closeDashDetail() {
 }
 
 function buildDetailRow(e, type) {
-  const dt     = e.savedAt ? new Date(e.savedAt) : null;
-  const time   = dt ? dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—';
-  const date   = dt ? dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })    : '—';
-  const amt    = `$${(e.amount || 0).toFixed(2)}`;
-  const paid   = e.paymentStatus === 'PAID';
+  const dt      = e.savedAt ? new Date(e.savedAt) : null;
+  const time    = dt ? dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—';
+  const date    = dt ? dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })    : '—';
+  const amt     = `$${(e.amount || 0).toFixed(2)}`;
+  const paid    = e.paymentStatus === 'PAID';
+  const savedAt = e.savedAt || '';
+
   const status = e.paymentStatus
-    ? `<span class="detail-status ${paid ? 'status-paid' : 'status-pending'}">${e.paymentStatus}</span>`
+    ? `<span class="detail-status ${paid ? 'status-paid' : 'status-pending'} clickable-status"
+         onclick="togglePaymentStatus(this.closest('.detail-row').dataset.savedAt)"
+         title="Tap to toggle paid / pending">${e.paymentStatus}</span>`
     : '';
+
+  const delBtn  = `<button class="detail-del" onclick="deleteEntry(this.closest('.detail-row').dataset.savedAt)" title="Delete entry">✕</button>`;
 
   const metaBase = `
     <span class="detail-by">${e.loggedBy || '—'}</span>
-    <span class="detail-time">${date} ${time}</span>`;
+    <span class="detail-time">${date} ${time}</span>
+    ${delBtn}`;
 
   if (type === 'table') return `
-    <div class="detail-row">
+    <div class="detail-row" data-saved-at="${savedAt}">
       <div class="detail-main">
         <span class="detail-org">${e.org || '—'}</span>
         <span class="detail-info">${e.serviceName || 'Table Work'}</span>
@@ -383,7 +390,7 @@ function buildDetailRow(e, type) {
     </div>`;
 
   if (type === 'parts') return `
-    <div class="detail-row">
+    <div class="detail-row" data-saved-at="${savedAt}">
       <div class="detail-main">
         <span class="detail-org">${e.org || '—'}</span>
         <span class="detail-info">Parts &amp; Components</span>
@@ -398,7 +405,7 @@ function buildDetailRow(e, type) {
     const tag  = e.type === 'table' ? 'TW' : 'PW';
     const info = e.type === 'table' ? (e.serviceName || 'Table Work') : 'Parts';
     return `
-    <div class="detail-row">
+    <div class="detail-row" data-saved-at="${savedAt}">
       <div class="detail-main">
         <span class="detail-type-tag">${tag}</span>
         <span class="detail-org">${e.org || '—'}</span>
@@ -412,7 +419,7 @@ function buildDetailRow(e, type) {
   }
 
   if (type === 'costs') return `
-    <div class="detail-row">
+    <div class="detail-row" data-saved-at="${savedAt}">
       <div class="detail-main">
         <span class="detail-org">// overhead expense</span>
       </div>
@@ -423,7 +430,7 @@ function buildDetailRow(e, type) {
     </div>`;
 
   if (type === 'invoice') return `
-    <div class="detail-row">
+    <div class="detail-row" data-saved-at="${savedAt}">
       <div class="detail-main">
         <span class="detail-inv-num">${e.invoiceNumber || '—'}</span>
         <span class="detail-org">${e.org || '—'}</span>
@@ -435,6 +442,29 @@ function buildDetailRow(e, type) {
     </div>`;
 
   return '';
+}
+
+// ── Entry actions (delete / toggle payment status) ─────────────
+function deleteEntry(savedAt) {
+  if (!savedAt) return;
+  STATE.localEntries = STATE.localEntries.filter(e => e.savedAt !== savedAt);
+  localStorage.setItem('pcj_local_entries', JSON.stringify(STATE.localEntries));
+  const active = document.getElementById('dashDetail').dataset.active;
+  if (active) showDashDetail(active);
+  refreshDashboard();
+  toast('Entry deleted');
+}
+
+function togglePaymentStatus(savedAt) {
+  if (!savedAt) return;
+  const entry = STATE.localEntries.find(e => e.savedAt === savedAt);
+  if (!entry || !entry.paymentStatus) return;
+  entry.paymentStatus = entry.paymentStatus === 'PAID' ? 'PENDING' : 'PAID';
+  localStorage.setItem('pcj_local_entries', JSON.stringify(STATE.localEntries));
+  const active = document.getElementById('dashDetail').dataset.active;
+  if (active) showDashDetail(active);
+  refreshDashboard();
+  toast(`Status → ${entry.paymentStatus}`);
 }
 
 // ── Invoice Builder: Dual Mode ────────────────────────────────
