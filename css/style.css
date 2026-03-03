@@ -197,6 +197,19 @@ body::after {
   transform: scale(1.1);
 }
 
+.btn-icon.btn-icon-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  box-shadow: none;
+}
+.btn-icon.btn-icon-ghost:hover {
+  background: var(--red-dim);
+  border-color: var(--red);
+  color: var(--red-bright);
+  box-shadow: 0 0 10px var(--red-glow);
+}
+
 /* ── SYS STATUS INDICATOR ────────────────────────────────────── */
 .sys-status {
   display: flex;
@@ -930,6 +943,19 @@ optgroup { color: var(--text-dim); }
   text-shadow: 0 0 20px rgba(192, 57, 43, 0.5);
 }
 
+/* ── Revenue paid / pending split ───────────────────────────── */
+.dash-split {
+  display: flex;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 1px;
+  flex-wrap: wrap;
+  margin-top: -2px;
+}
+.split-paid { color: var(--success); }
+.split-pend { color: var(--red-bright); }
+
 /* ── Clickable dash card states ─────────────────────────────── */
 .dash-card.clickable { cursor: pointer; }
 
@@ -1166,6 +1192,20 @@ optgroup { color: var(--text-dim); }
   top: 0; left: 0; right: 0;
   height: 2px;
   background: linear-gradient(90deg, var(--red), var(--red-bright), transparent);
+}
+
+.modal-warn {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-sub);
+  line-height: 1.7;
+  margin-bottom: 22px;
+  letter-spacing: 0.5px;
+}
+.modal-warn strong {
+  color: var(--red-bright);
+  font-family: var(--font-display);
+  letter-spacing: 1px;
 }
 
 .modal h3 {

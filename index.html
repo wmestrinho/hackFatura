@@ -52,6 +52,7 @@
               <option value="">NO_EVENT</option>
             </select>
             <button class="btn-icon" onclick="showModal('addEventModal')" title="New Event">+</button>
+            <button class="btn-icon btn-icon-ghost" onclick="openDeleteEventModal()" title="Delete Selected Event">✕</button>
           </div>
         </div>
       </div>
@@ -579,6 +580,7 @@
           <span class="dash-expand">LIST ▶</span>
           <div class="dash-label">// Revenue Collected</div>
           <div class="dash-value green" id="dash_rev">—</div>
+          <div class="dash-split" id="dash_rev_split"></div>
         </div>
         <div class="dash-card clickable" data-detail="costs" onclick="showDashDetail('costs')">
           <span class="dash-expand">LIST ▶</span>
@@ -637,6 +639,23 @@
       <div class="btn-group">
         <button class="btn-submit" onclick="saveNewEvent()" style="margin-top:0">⚡ CREATE</button>
         <button class="btn-secondary" onclick="closeModal('addEventModal')">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       MODAL — Delete Event
+  ════════════════════════════════════════════════════ -->
+  <div id="deleteEventModal" class="modal-overlay" onclick="closeModal('deleteEventModal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>// Delete Event</h3>
+      <p class="modal-warn">
+        Permanently remove <strong id="deleteEventName"></strong> from your event list?
+        All local entries logged for this event will also be deleted.
+      </p>
+      <div class="btn-group">
+        <button class="btn-submit" onclick="confirmDeleteEvent()" style="margin-top:0">⌦ CONFIRM DELETE</button>
+        <button class="btn-secondary" onclick="closeModal('deleteEventModal')">CANCEL</button>
       </div>
     </div>
   </div>

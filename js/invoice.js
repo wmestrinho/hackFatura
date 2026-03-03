@@ -251,4 +251,6 @@ async function saveInvoiceToSheets() {
   }
   saveLocalEntry({ type: 'invoice', event: d.event, org: d.org, amount: d.total, loggedBy: d.loggedBy, invoiceNumber: d.number });
   saveLocalCustomer(d.org);
+  const invNum = document.getElementById('inv_number');
+  if (invNum) invNum.value = generateInvoiceNumber();
 }

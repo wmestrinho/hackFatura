@@ -10,9 +10,21 @@ function go(viewId) {
   updateEventBadges();
 
   if (viewId === 'eventDashboard') refreshDashboard();
-  if (viewId === 'invoiceBuilder' && document.getElementById('lineItemsList').children.length === 0) {
-    addLineItem(); // start with one empty line
+  if (viewId === 'invoiceBuilder') {
+    if (document.getElementById('lineItemsList').children.length === 0) addLineItem();
+    const invNum = document.getElementById('inv_number');
+    if (invNum && !invNum.value) invNum.value = generateInvoiceNumber();
   }
+}
+
+// ── Invoice number generator ───────────────────────────────────
+function generateInvoiceNumber() {
+  const now  = new Date();
+  const base = `PCJ-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const todayCount = STATE.localEntries.filter(e =>
+    e.type === 'invoice' && e.invoiceNumber && e.invoiceNumber.startsWith(base)
+  ).length;
+  return `${base}-${String(todayCount + 1).padStart(3, '0')}`;
 }
 
 // ── Toast ─────────────────────────────────────────────────────
@@ -58,6 +70,26 @@ function saveNewEvent() {
   document.getElementById('newEventDate').value = '';
   document.getElementById('newEventLocation').value = '';
   toast(`Event created: ${name}`);
+}
+
+// ── Delete event ──────────────────────────────────────────────
+function openDeleteEventModal() {
+  if (!STATE.currentEvent) { toast('Select an event to delete', true); return; }
+  document.getElementById('deleteEventName').textContent = STATE.currentEvent;
+  showModal('deleteEventModal');
+}
+
+function confirmDeleteEvent() {
+  const name = STATE.currentEvent;
+  STATE.events = STATE.events.filter(e => e.name !== name);
+  STATE.localEntries = STATE.localEntries.filter(e => e.event !== name);
+  saveEvents();
+  localStorage.setItem('pcj_local_entries', JSON.stringify(STATE.localEntries));
+  setEvent('');
+  document.getElementById('currentEvent').value = '';
+  renderEventSelect();
+  closeModal('deleteEventModal');
+  toast(`Event deleted: ${name}`);
 }
 
 // ── Kart number tags ──────────────────────────────────────────
@@ -252,6 +284,17 @@ function refreshDashboard() {
   const revenue = [...twRows, ...pwRows].reduce((s, e) => s + (e.amount || 0), 0);
   const costs   = wcRows.reduce((s, e) => s + (e.amount || 0), 0);
   const ops     = [...new Set([...twRows, ...pwRows].map(e => e.loggedBy).filter(Boolean))];
+
+  const revenueRows = [...twRows, ...pwRows];
+  const paid    = revenueRows.filter(e => e.paymentStatus === 'PAID').reduce((s, e) => s + (e.amount || 0), 0);
+  const pending = revenueRows.filter(e => e.paymentStatus !== 'PAID').reduce((s, e) => s + (e.amount || 0), 0);
+  const splitEl = document.getElementById('dash_rev_split');
+  if (splitEl) {
+    splitEl.innerHTML = revenueRows.length === 0 ? '' :
+      pending > 0
+        ? `<span class="split-paid">✓ $${paid.toFixed(2)}</span><span class="split-pend">⏳ $${pending.toFixed(2)}</span>`
+        : `<span class="split-paid">✓ ALL PAID</span>`;
+  }
 
   document.getElementById('dash_tw').textContent    = twRows.length  || '0';
   document.getElementById('dash_pw').textContent    = pwRows.length  || '0';
@@ -491,12 +534,6 @@ function updateMenuStatus() {
 
   // Tick clock on menu
   setInterval(updateMenuStatus, 10000);
-
-  // Set invoice number default
-  const now = new Date();
-  const autoNum = `PCJ-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-001`;
-  const invNum = document.getElementById('inv_number');
-  if (invNum) invNum.placeholder = autoNum;
 
   // Load customer list from Sheets (non-blocking)
   loadCustomerDatalist();
