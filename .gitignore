@@ -2,7 +2,10 @@
 .DS_Store
 **/.DS_Store
 
-# Assets — keep only what's used in the app
+# Assets — only pcj-logo.png belongs in the app
+assets/*.png
+assets/*.jpg
+assets/*.jpeg
 assets/*.mp4
 assets/*.pdf
 assets/*.zip
@@ -11,6 +14,7 @@ assets/Instructions/
 assets/firstquarter/
 assets/firstquarter.zip
 assets/2025PCJ/
+!assets/pcj-logo.png
 
 # Dev
 *.log
